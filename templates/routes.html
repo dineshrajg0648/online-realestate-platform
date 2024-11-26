@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Travel Routes</h2>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Find Routes</h5>
+                    <form id="routeSearchForm">
+                        <div class="mb-3">
+                            <label for="origin" class="form-label">Origin</label>
+                            <input type="text" class="form-control" id="origin" name="origin" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="destination" class="form-label">Destination</label>
+                            <input type="text" class="form-control" id="destination" name="destination" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="transport" class="form-label">Transportation Type</label>
+                            <select class="form-select" id="transport" name="transport">
+                                <option value="all">All Types</option>
+                                <option value="bus">Bus</option>
+                                <option value="train">Train</option>
+                                <option value="flight">Flight</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Search Routes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for route in routes %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ route.origin }} to {{ route.destination }}</h5>
+                    <div class="route-details">
+                        <p><strong>Distance:</strong> {{ route.distance }} km</p>
+                        <p><strong>Estimated Time:</strong> {{ route.estimated_time }}</p>
+                        <p><strong>Transportation:</strong> {{ route.transportation_type }}</p>
+                        <p><strong>Price:</strong> ${{ "%.2f"|format(route.price) }}</p>
+                    </div>
+                    <a href="{{ url_for('book_route', route_id=route.id) }}" class="btn btn-primary mt-3">Book This Route</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not routes %}
+    <div class="alert alert-info">
+        No routes found. Try searching with different criteria.
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById('routeSearchForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Add route search functionality here
+    const origin = document.getElementById('origin').value;
+    const destination = document.getElementById('destination').value;
+    const transport = document.getElementById('transport').value;
+    console.log('Searching routes:', { origin, destination, transport });
+});
+
+function bookRoute(routeId) {
+    // Add route booking functionality here
+    console.log('Booking route:', routeId);
+}
+</script>
+{% endblock %}

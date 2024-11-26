@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Login - DreamHome{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header">
+                    <h3 class="text-center font-weight-light my-4">Login to DreamHome</h3>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <div class="mb-3">
+                            <label for="login_id" class="form-label">User ID or Email</label>
+                            <input type="text" class="form-control" id="login_id" name="login_id" 
+                                   placeholder="Enter your User ID (e.g., DH000001) or Email" required>
+                            <div class="form-text">Enter your unique User ID or registered email address</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
+                            <a class="small text-muted" href="{{ url_for('reset_password_request') }}">Forgot Password?</a>
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small">Need an account? Please contact the administrator.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

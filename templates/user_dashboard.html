@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard - DreamHome{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Welcome back, {{ current_user.username }}!</h1>
+            <p class="text-muted">Manage your real estate activities and preferences</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Saved Properties</h6>
+                    <h2 class="mb-0">{{ saved_properties|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Property Inquiries</h6>
+                    <h2 class="mb-0">{{ inquiries|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Scheduled Viewings</h6>
+                    <h2 class="mb-0">{{ appointments|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Saved Searches</h6>
+                    <h2 class="mb-0">{{ saved_searches|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-md-8">
+            <!-- Saved Properties -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Saved Properties</h5>
+                    <a href="{{ url_for('properties') }}" class="btn btn-sm btn-primary">View All Properties</a>
+                </div>
+                <div class="card-body">
+                    {% if saved_properties %}
+                    <div class="row">
+                        {% for property in saved_properties[:4] %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <img src="{{ property.images[0] if property.images else url_for('static', filename='img/property-placeholder.jpg') }}" 
+                                     class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ property.title }}</h6>
+                                    <p class="card-text text-muted">{{ property.location }}</p>
+                                    <p class="card-text"><strong>${{ "{:,.2f}".format(property.price) }}</strong></p>
+                                    <a href="{{ url_for('view_property', property_id=property.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No saved properties yet. Start browsing our listings!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Inquiries -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Inquiries</h5>
+                </div>
+                <div class="card-body">
+                    {% if inquiries %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inquiry in inquiries[:5] %}
+                                <tr>
+                                    <td>{{ inquiry.property.title }}</td>
+                                    <td>{{ inquiry.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if inquiry.status == 'responded' else 'warning' }}">
+                                            {{ inquiry.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('view_property', property_id=inquiry.property.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">View Property</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No inquiries yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-md-4">
+            <!-- Profile Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Profile</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{{ current_user.profile_image if current_user.profile_image else url_for('static', filename='img/user-placeholder.jpg') }}" 
+                         class="rounded-circle mb-3" alt="Profile Picture" style="width: 100px; height: 100px; object-fit: cover;">
+                    <h5>{{ current_user.username }}</h5>
+                    <p class="text-muted">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+                    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
+                </div>
+            </div>
+
+            <!-- Upcoming Viewings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Upcoming Viewings</h5>
+                </div>
+                <div class="card-body">
+                    {% if appointments %}
+                    <div class="list-group list-group-flush">
+                        {% for appointment in appointments[:3] %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ appointment.property.title }}</h6>
+                                <small>{{ appointment.viewing_date.strftime('%b %d') }}</small>
+                            </div>
+                            <p class="mb-1">{{ appointment.viewing_date.strftime('%I:%M %p') }}</p>
+                            <small class="text-muted">With: {{ appointment.agent.username }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No upcoming viewings scheduled.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Saved Searches -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Saved Searches</h5>
+                </div>
+                <div class="card-body">
+                    {% if saved_searches %}
+                    <div class="list-group list-group-flush">
+                        {% for search in saved_searches %}
+                        <a href="{{ url_for('properties', **search.criteria) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ search.name }}</h6>
+                                <small>{{ search.created_at.strftime('%b %d') }}</small>
+                            </div>
+                            <p class="mb-1">{{ search.description }}</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No saved searches yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

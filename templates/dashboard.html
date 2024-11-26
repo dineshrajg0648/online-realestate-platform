@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">My Dashboard</h1>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Purchase Requests</h5>
+                    <h2 class="mb-0">{{ purchase_requests|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Saved Searches</h5>
+                    <h2 class="mb-0">{{ saved_searches|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Appointments</h5>
+                    <h2 class="mb-0">{{ appointments|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Activities</h5>
+                    <h2 class="mb-0">{{ activities|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Purchase Requests -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">My Purchase Requests</h5>
+                </div>
+                <div class="card-body">
+                    {% if purchase_requests %}
+                    <div class="list-group">
+                        {% for request in purchase_requests %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ request.property.title }}</h6>
+                                <small class="text-muted">{{ request.request_date.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <p class="mb-1">
+                                Status: 
+                                <span class="badge {% if request.status == 'pending' %}bg-warning
+                                           {% elif request.status == 'approved' %}bg-success
+                                           {% else %}bg-danger{% endif %}">
+                                    {{ request.status.title() }}
+                                </span>
+                            </p>
+                            <small class="text-muted">Price: ${{ "{:,.2f}".format(request.property.price) }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No purchase requests yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Upcoming Appointments</h5>
+                </div>
+                <div class="card-body">
+                    {% if appointments %}
+                    <div class="list-group">
+                        {% for appointment in appointments %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ appointment.property.title }}</h6>
+                                <small class="text-muted">{{ appointment.appointment_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">
+                                Status: 
+                                <span class="badge {% if appointment.status == 'pending' %}bg-warning
+                                           {% elif appointment.status == 'confirmed' %}bg-success
+                                           {% else %}bg-secondary{% endif %}">
+                                    {{ appointment.status.title() }}
+                                </span>
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No upcoming appointments.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Properties -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Featured Properties</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% if featured_properties %}
+                {% for property in featured_properties %}
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <img src="{{ property.images.split(',')[0] if property.images else url_for('static', filename='img/placeholder.jpg') }}" 
+                             class="card-img-top" alt="{{ property.title }}" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ property.title }}</h5>
+                            <p class="card-text text-muted">{{ property.location }}</p>
+                            <h6 class="text-primary">${{ "{:,.2f}".format(property.price) }}</h6>
+                            <a href="{{ url_for('view_property', property_id=property.id) }}" 
+                               class="btn btn-outline-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="col">
+                    <p class="text-muted">No featured properties available.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Activities</h5>
+        </div>
+        <div class="card-body">
+            {% if activities %}
+            <div class="list-group">
+                {% for activity in activities %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ activity.activity_type.replace('_', ' ').title() }}</h6>
+                        <small class="text-muted">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    <p class="mb-1">{{ activity.description }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No recent activities.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
