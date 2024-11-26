@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2>Manage Hotels</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Add New Hotel</h5>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Hotel Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="price_per_night" class="form-label">Price per Night ($)</label>
+                        <input type="number" step="0.01" class="form-control" id="price_per_night" name="price_per_night" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amenities" class="form-label">Amenities</label>
+                        <textarea class="form-control" id="amenities" name="amenities" rows="2" placeholder="WiFi, Pool, Gym, etc."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Hotel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Hotel Listings</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Location</th>
+                                <th>Price/Night</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hotel in hotels %}
+                            <tr>
+                                <td>{{ hotel.name }}</td>
+                                <td>{{ hotel.location }}</td>
+                                <td>${{ "%.2f"|format(hotel.price_per_night) }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                onclick="editHotel({{ hotel.id }})">Edit</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                onclick="deleteHotel({{ hotel.id }})">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function editHotel(hotelId) {
+    // Implement hotel editing functionality
+    console.log('Edit hotel:', hotelId);
+}
+
+function deleteHotel(hotelId) {
+    if (confirm('Are you sure you want to delete this hotel?')) {
+        // Implement hotel deletion functionality
+        console.log('Delete hotel:', hotelId);
+    }
+}
+</script>
+{% endblock %}

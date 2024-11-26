@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Our Agents - DreamHome{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center mb-4">Our Real Estate Agents</h1>
+            <p class="text-center text-muted">Meet our team of professional real estate agents ready to help you find your dream home.</p>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <form class="search-form" method="get">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" placeholder="Search agents by name or location..." value="{{ request.args.get('search', '') }}">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Agents Grid -->
+    <div class="row">
+        {% for agent in agents.items %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="text-center pt-4">
+                    <img src="{{ agent.profile_image if agent.profile_image else url_for('static', filename='img/agent-placeholder.jpg') }}" 
+                         class="rounded-circle" alt="{{ agent.username }}"
+                         style="width: 150px; height: 150px; object-fit: cover;">
+                </div>
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ agent.username }}</h5>
+                    <p class="text-muted mb-3">Real Estate Agent</p>
+                    <div class="agent-stats d-flex justify-content-center gap-3 mb-3">
+                        <div>
+                            <small class="text-muted d-block">Properties</small>
+                            <strong>{{ agent.listings|length }}</strong>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Sales</small>
+                            <strong>{{ agent.listings|selectattr('status', 'equalto', 'sold')|list|length }}</strong>
+                        </div>
+                    </div>
+                    <div class="social-links mb-3">
+                        {% if agent.social_media %}
+                        {% if agent.social_media.linkedin %}
+                        <a href="{{ agent.social_media.linkedin }}" class="text-muted me-2" target="_blank">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        {% endif %}
+                        {% if agent.social_media.twitter %}
+                        <a href="{{ agent.social_media.twitter }}" class="text-muted me-2" target="_blank">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('agent_profile', agent_id=agent.id) }}" class="btn btn-outline-primary">View Profile</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if agents.pages > 1 %}
+    <nav aria-label="Agent navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {{ 'disabled' if not agents.has_prev }}">
+                <a class="page-link" href="{{ url_for('agents', page=agents.prev_num, **request.args) if agents.has_prev else '#' }}">Previous</a>
+            </li>
+            {% for page_num in agents.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                {% if page_num %}
+                    <li class="page-item {{ 'active' if page_num == agents.page }}">
+                        <a class="page-link" href="{{ url_for('agents', page=page_num, **request.args) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+            <li class="page-item {{ 'disabled' if not agents.has_next }}">
+                <a class="page-link" href="{{ url_for('agents', page=agents.next_num, **request.args) if agents.has_next else '#' }}">Next</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- Join Our Team Section -->
+    <div class="bg-light p-5 rounded-3 mt-5">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2>Join Our Team of Real Estate Professionals</h2>
+                <p class="lead">Are you a real estate agent looking to work with a dynamic and growing team? We'd love to hear from you!</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i> Competitive commission structure</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Professional development opportunities</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Marketing and technology support</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Flexible working arrangements</li>
+                </ul>
+            </div>
+            <div class="col-md-4 text-center">
+                <a href="#" class="btn btn-primary btn-lg">Apply Now</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}{{ property.title }} - DreamHome{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Property Title and Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-2">{{ property.title }}</h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-map-marker-alt"></i> {{ property.location }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if current_user.is_authenticated %}
+            <button class="btn {{ 'btn-danger' if is_saved else 'btn-outline-danger' }}" 
+                    onclick="toggleSaved({{ property.id }})">
+                <i class="fas fa-heart"></i> {{ 'Saved' if is_saved else 'Save' }}
+            </button>
+            {% endif %}
+            <button class="btn btn-outline-primary" onclick="share()">
+                <i class="fas fa-share-alt"></i> Share
+            </button>
+        </div>
+    </div>
+
+    <!-- Property Gallery -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div id="propertyGallery" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for image in property.images.split(',') %}
+                    <div class="carousel-item {{ 'active' if loop.first }}">
+                        <img src="{{ image }}" class="d-block w-100" alt="Property Image {{ loop.index }}">
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#propertyGallery" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#propertyGallery" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="property-price mb-4">${{ "{:,.2f}".format(property.price) }}</h2>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span><i class="fas fa-bed"></i> {{ property.bedrooms }} Beds</span>
+                        <span><i class="fas fa-bath"></i> {{ property.bathrooms }} Baths</span>
+                        <span><i class="fas fa-ruler-combined"></i> {{ property.area }} sqft</span>
+                    </div>
+                    <hr>
+                    <h5>Property Details</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-home"></i> Type: {{ property.property_type.title() }}</li>
+                        <li class="mb-2"><i class="fas fa-tag"></i> For {{ property.transaction_type.title() }}</li>
+                        <li class="mb-2"><i class="fas fa-calendar-alt"></i> Listed: {{ property.created_at.strftime('%B %d, %Y') }}</li>
+                    </ul>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inquiryModal">
+                            Make Inquiry
+                        </button>
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewingModal">
+                            Schedule Viewing
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Description and Features -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3>Description</h3>
+                    <p>{{ property.description }}</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h3>Amenities</h3>
+                    <div class="row">
+                        {% for amenity in property.amenities.split(',') %}
+                        <div class="col-md-4 mb-2">
+                            <i class="fas fa-check text-success"></i> {{ amenity.strip() }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3>Agent Information</h3>
+                    <div class="text-center mb-3">
+                        <img src="{{ property.agent.profile_image if property.agent.profile_image else url_for('static', filename='img/agent-placeholder.jpg') }}" 
+                             class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                    </div>
+                    <h5 class="text-center">{{ property.agent.username }}</h5>
+                    <p class="text-center text-muted">Real Estate Agent</p>
+                    <hr>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-envelope"></i> {{ property.agent.email }}</li>
+                        <li class="mb-2"><i class="fas fa-phone"></i> {{ property.agent.phone }}</li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="{{ url_for('agent_profile', agent_id=property.agent.id) }}" class="btn btn-outline-primary">
+                            View Agent Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h3>Location</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> {{ property.address }}</p>
+                    <div id="map" style="height: 200px;" class="mb-3"></div>
+                    <small class="text-muted">{{ property.city }}, {{ property.state }} {{ property.zipcode }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Similar Properties -->
+    <div class="mb-4">
+        <h3>Similar Properties</h3>
+        <div class="row">
+            {% for similar in similar_properties %}
+            <div class="col-md-4">
+                <div class="property-card card h-100">
+                    <img src="{{ similar.images.split(',')[0] }}" class="card-img-top" alt="{{ similar.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ similar.title }}</h5>
+                        <p class="property-price">${{ "{:,.2f}".format(similar.price) }}</p>
+                        <p class="card-text text-muted">{{ similar.location }}</p>
+                        <div class="property-features d-flex justify-content-between mb-3">
+                            <span><i class="fas fa-bed"></i> {{ similar.bedrooms }}</span>
+                            <span><i class="fas fa-bath"></i> {{ similar.bathrooms }}</span>
+                            <span><i class="fas fa-ruler-combined"></i> {{ similar.area }}</span>
+                        </div>
+                        <a href="{{ url_for('view_property', property_id=similar.id) }}" class="btn btn-outline-primary w-100">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Inquiry Modal -->
+<div class="modal fade" id="inquiryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Make an Inquiry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="inquiryForm" action="{{ url_for('make_inquiry', property_id=property.id) }}" method="post">
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Inquiry</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Viewing Modal -->
+<div class="modal fade" id="viewingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Schedule a Viewing</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="viewingForm" action="{{ url_for('book_appointment', property_id=property.id) }}" method="post">
+                    <div class="mb-3">
+                        <label for="viewing_date" class="form-label">Preferred Date</label>
+                        <input type="date" class="form-control" id="viewing_date" name="viewing_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="viewing_time" class="form-label">Preferred Time</label>
+                        <input type="time" class="form-control" id="viewing_time" name="viewing_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Additional Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Schedule Viewing</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+function initMap() {
+    // Initialize the map (you'll need to replace with actual coordinates)
+    const map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 15,
+        center: { lat: -34.397, lng: 150.644 }
+    });
+    
+    // Add a marker for the property location
+    new google.maps.Marker({
+        position: { lat: -34.397, lng: 150.644 },
+        map: map,
+        title: '{{ property.title }}'
+    });
+}
+
+function toggleSaved(propertyId) {
+    fetch(`/api/properties/${propertyId}/toggle_saved`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const btn = event.target.closest('.btn');
+            btn.classList.toggle('btn-outline-danger');
+            btn.classList.toggle('btn-danger');
+            btn.innerHTML = data.saved ? '<i class="fas fa-heart"></i> Saved' : '<i class="fas fa-heart"></i> Save';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function share() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ property.title }}',
+            text: 'Check out this property on DreamHome!',
+            url: window.location.href
+        })
+        .catch(error => console.log('Error sharing:', error));
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = window.location.href;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        alert('Link copied to clipboard!');
+    }
+}
+
+// Initialize map when the page loads
+window.addEventListener('load', initMap);
+</script>
+{% endblock %}

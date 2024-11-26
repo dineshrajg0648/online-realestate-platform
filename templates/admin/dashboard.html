@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Admin Dashboard</h2>
+    
+    <!-- Statistics Overview -->
+    <div class="row mt-4">
+        <div class="col-md-3 mb-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <h2>{{ stats.total_users }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Hotels</h5>
+                    <h2>{{ stats.total_hotels }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Routes</h5>
+                    <h2>{{ stats.total_routes }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Food Items</h5>
+                    <h2>{{ stats.total_food_items }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Booking Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Bookings
+                            <span class="badge bg-primary rounded-pill">{{ stats.total_bookings }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            Pending Bookings
+                            <span class="badge bg-warning rounded-pill">{{ stats.pending_bookings }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            Confirmed Bookings
+                            <span class="badge bg-success rounded-pill">{{ stats.confirmed_bookings }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Bookings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for booking in stats.recent_bookings %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ booking.hotel.name }}</h6>
+                                <small class="text-muted">{{ booking.status }}</small>
+                            </div>
+                            <p class="mb-1">Check-in: {{ booking.check_in.strftime('%Y-%m-%d') }}</p>
+                            <small>Booked by: {{ booking.user.username }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('manage_hotels') }}" class="btn btn-primary btn-block mb-2">Manage Hotels</a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('manage_food') }}" class="btn btn-success btn-block mb-2">Manage Food</a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('manage_routes') }}" class="btn btn-info btn-block mb-2">Manage Routes</a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('view_bookings') }}" class="btn btn-warning btn-block mb-2">View Bookings</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

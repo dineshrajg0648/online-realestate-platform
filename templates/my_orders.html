@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>My Food Orders</h2>
+    
+    {% if orders %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Food Item</th>
+                    <th>Quantity</th>
+                    <th>Total Price</th>
+                    <th>Delivery Address</th>
+                    <th>Status</th>
+                    <th>Order Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.food.name if order.food else 'Item no longer available' }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td>${{ "%.2f"|format(order.total_price) }}</td>
+                    <td>{{ order.delivery_address }}</td>
+                    <td><span class="badge bg-{{ 'success' if order.status == 'confirmed' else 'warning' }}">{{ order.status }}</span></td>
+                    <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        You haven't placed any food orders yet.
+    </div>
+    {% endif %}
+    
+    <a href="{{ url_for('foods') }}" class="btn btn-primary">Order More Food</a>
+</div>
+{% endblock %}

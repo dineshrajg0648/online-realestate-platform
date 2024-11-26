@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Properties - DreamHome{% endblock %}
+
+{% block extra_css %}
+<style>
+.property-card {
+    transition: transform 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.property-card:hover {
+    transform: translateY(-5px);
+}
+.property-card .card-img-top {
+    height: 250px;
+    object-fit: cover;
+}
+.featured-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ffd700;
+    color: #000;
+    padding: 5px 10px;
+    border-radius: 3px;
+    z-index: 1;
+}
+.property-price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+.property-features {
+    color: #666;
+}
+.image-gallery {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+}
+.gallery-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
+.gallery-prev { left: 0; }
+.gallery-next { right: 0; }
+.status-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+}
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Search Form -->
+<div class="search-form mb-5">
+    <form method="get" action="{{ url_for('properties') }}">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="location" placeholder="Location" value="{{ request.args.get('location', '') }}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="property_type">
+                    <option value="">Property Type</option>
+                    <option value="house" {% if request.args.get('property_type') == 'house' %}selected{% endif %}>House</option>
+                    <option value="apartment" {% if request.args.get('property_type') == 'apartment' %}selected{% endif %}>Apartment</option>
+                    <option value="commercial" {% if request.args.get('property_type') == 'commercial' %}selected{% endif %}>Commercial</option>
+                    <option value="land" {% if request.args.get('property_type') == 'land' %}selected{% endif %}>Land</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="transaction_type">
+                    <option value="">For Sale/Rent</option>
+                    <option value="sale" {% if request.args.get('transaction_type') == 'sale' %}selected{% endif %}>For Sale</option>
+                    <option value="rent" {% if request.args.get('transaction_type') == 'rent' %}selected{% endif %}>For Rent</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="min_price" placeholder="Min Price" value="{{ request.args.get('min_price', '') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="max_price" placeholder="Max Price" value="{{ request.args.get('max_price', '') }}">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-2">
+                <select class="form-select" name="bedrooms">
+                    <option value="">Bedrooms</option>
+                    {% for i in range(1, 6) %}
+                    <option value="{{ i }}" {% if request.args.get('bedrooms')|int == i %}selected{% endif %}>{{ i }}+</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="bathrooms">
+                    <option value="">Bathrooms</option>
+                    {% for i in range(1, 5) %}
+                    <option value="{{ i }}" {% if request.args.get('bathrooms')|float == i %}selected{% endif %}>{{ i }}+</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="min_area" placeholder="Min Area (sqft)" value="{{ request.args.get('min_area', '') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="max_area" placeholder="Max Area (sqft)" value="{{ request.args.get('max_area', '') }}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="sort">
+                    <option value="">Sort By</option>
+                    <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Price (Low to High)</option>
+                    <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Price (High to Low)</option>
+                    <option value="date_desc" {% if request.args.get('sort') == 'date_desc' %}selected{% endif %}>Newest First</option>
+                    <option value="date_asc" {% if request.args.get('sort') == 'date_asc' %}selected{% endif %}>Oldest First</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">Clear Filters</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Properties Grid -->
+<div class="row">
+    {% for property in properties.items %}
+    <div class="col-md-4 mb-4">
+        <div class="property-card card h-100">
+            {% if property.featured %}
+            <span class="featured-badge">
+                <i class="fas fa-star"></i> Featured
+            </span>
+            {% endif %}
+            
+            <!-- Image Gallery -->
+            <div class="image-gallery">
+                {% set images = property.images.split(',') if property.images else [url_for('static', filename='img/placeholder.jpg')] %}
+                <img src="{{ images[0] }}" class="card-img-top" alt="{{ property.title }}" id="img-{{ property.id }}">
+                {% if images|length > 1 %}
+                <button class="gallery-nav gallery-prev" onclick="changeImage({{ property.id }}, -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="gallery-nav gallery-next" onclick="changeImage({{ property.id }}, 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                {% endif %}
+                
+                <!-- Status Badge -->
+                <span class="badge bg-{{ 'primary' if property.transaction_type == 'sale' else 'success' }} status-badge">
+                    For {{ property.transaction_type.title() }}
+                </span>
+            </div>
+            
+            <div class="card-body">
+                <h5 class="card-title">{{ property.title }}</h5>
+                <p class="property-price">${{ "{:,.2f}".format(property.price) }}</p>
+                <p class="card-text text-muted">
+                    <i class="fas fa-map-marker-alt"></i> {{ property.location }}
+                </p>
+                <div class="property-features d-flex justify-content-between mb-3">
+                    <span><i class="fas fa-bed"></i> {{ property.bedrooms }} Beds</span>
+                    <span><i class="fas fa-bath"></i> {{ property.bathrooms }} Baths</span>
+                    <span><i class="fas fa-ruler-combined"></i> {{ property.area }} sqft</span>
+                </div>
+                <p class="card-text small text-muted mb-3">{{ property.description[:100] }}...</p>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="{{ url_for('view_property', property_id=property.id) }}" 
+                       class="btn btn-outline-primary flex-grow-1">
+                        <i class="fas fa-info-circle"></i> View Details
+                    </a>
+                    {% if current_user.is_authenticated %}
+                        {% if property.transaction_type == 'sale' %}
+                        <a href="{{ url_for('buy_property', property_id=property.id) }}" 
+                           class="btn btn-success">
+                            <i class="fas fa-shopping-cart"></i> Buy Now
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('book_appointment', property_id=property.id) }}" 
+                           class="btn btn-info text-white">
+                            <i class="fas fa-calendar-alt"></i> Schedule Viewing
+                        </a>
+                        {% endif %}
+                        <button class="btn btn-outline-danger" 
+                                onclick="toggleSaved({{ property.id }})" 
+                                title="Save Property">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                <small>
+                    <i class="fas fa-clock"></i> 
+                    Listed {{ property.created_at.strftime('%B %d, %Y') }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if properties.pages > 1 %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {{ 'disabled' if not properties.has_prev }}">
+            <a class="page-link" href="{{ url_for('properties', page=properties.prev_num, **request.args) if properties.has_prev else '#' }}">Previous</a>
+        </li>
+        {% for page_num in properties.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+            {% if page_num %}
+                <li class="page-item {{ 'active' if page_num == properties.page }}">
+                    <a class="page-link" href="{{ url_for('properties', page=page_num, **request.args) }}">{{ page_num }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not properties.has_next }}">
+            <a class="page-link" href="{{ url_for('properties', page=properties.next_num, **request.args) if properties.has_next else '#' }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function clearFilters() {
+    window.location.href = "{{ url_for('properties') }}";
+}
+
+// Image Gallery Functionality
+const propertyImages = {};
+{% for property in properties.items %}
+    {% if property.images %}
+        propertyImages[{{ property.id }}] = {{ property.images.split(',')|tojson|safe }};
+    {% else %}
+        propertyImages[{{ property.id }}] = ["{{ url_for('static', filename='img/placeholder.jpg') }}"];
+    {% endif %}
+{% endfor %}
+
+function changeImage(propertyId, direction) {
+    const images = propertyImages[propertyId];
+    const img = document.getElementById(`img-${propertyId}`);
+    let currentIndex = images.indexOf(img.src);
+    
+    if (currentIndex === -1) {
+        currentIndex = 0;
+    }
+    
+    let newIndex = currentIndex + direction;
+    if (newIndex >= images.length) {
+        newIndex = 0;
+    } else if (newIndex < 0) {
+        newIndex = images.length - 1;
+    }
+    
+    img.src = images[newIndex];
+}
+
+function toggleSaved(propertyId) {
+    fetch(`/api/properties/${propertyId}/toggle_saved`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const btn = event.target.closest('.btn');
+            btn.classList.toggle('btn-outline-danger');
+            btn.classList.toggle('btn-danger');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %}

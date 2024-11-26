@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>All Bookings</h2>
+
+    <!-- Hotel Bookings -->
+    <h3 class="mt-4">Hotel Bookings</h3>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>User</th>
+                    <th>Hotel</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Guests</th>
+                    <th>Total Price</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>#{{ booking.id }}</td>
+                    <td>{{ booking.user.username }}</td>
+                    <td>{{ booking.hotel.name }}</td>
+                    <td>{{ booking.check_in_date }}</td>
+                    <td>{{ booking.check_out_date }}</td>
+                    <td>{{ booking.num_guests }}</td>
+                    <td>${{ "%.2f"|format(booking.total_price) }}</td>
+                    <td><span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' }}">{{ booking.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Route Bookings -->
+    <h3 class="mt-4">Route Bookings</h3>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>User</th>
+                    <th>Route</th>
+                    <th>Travel Date</th>
+                    <th>Passengers</th>
+                    <th>Total Price</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in route_bookings %}
+                <tr>
+                    <td>#{{ booking.id }}</td>
+                    <td>{{ booking.user_route.username }}</td>
+                    <td>{{ booking.route.origin }} to {{ booking.route.destination }}</td>
+                    <td>{{ booking.travel_date }}</td>
+                    <td>{{ booking.num_passengers }}</td>
+                    <td>${{ "%.2f"|format(booking.total_price) }}</td>
+                    <td><span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' }}">{{ booking.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Food Orders -->
+    <h3 class="mt-4">Food Orders</h3>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>User</th>
+                    <th>Food Item</th>
+                    <th>Quantity</th>
+                    <th>Total Price</th>
+                    <th>Delivery Address</th>
+                    <th>Status</th>
+                    <th>Order Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in food_orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.user.username }}</td>
+                    <td>{{ order.food.name }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td>${{ "%.2f"|format(order.total_price) }}</td>
+                    <td>{{ order.delivery_address }}</td>
+                    <td><span class="badge bg-{{ 'success' if order.status == 'confirmed' else 'warning' }}">{{ order.status }}</span></td>
+                    <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}
